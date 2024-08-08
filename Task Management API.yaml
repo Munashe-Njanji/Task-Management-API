@@ -1,0 +1,618 @@
+openapi: 3.0.0
+info:
+  title: Task Management API
+  description: A HATEOAS-compliant API for managing tasks, projects, and related entities
+  version: 1.0.0
+
+servers:
+  - url: http://api.example.com/api/v1/
+
+paths:
+  /:
+    get:
+      summary: API Root
+      description: The entry point of the API
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects: 
+                    type: string
+                    format: uri
+                  milestones: 
+                    type: string
+                    format: uri
+                  categories: 
+                    type: string
+                    format: uri
+                  tags: 
+                    type: string
+                    format: uri
+                  todos: 
+                    type: string
+                    format: uri
+                  comments: 
+                    type: string
+                    format: uri
+                  attachments: 
+                    type: string
+                    format: uri
+                  recurring-tasks: 
+                    type: string
+                    format: uri
+                  activity-logs: 
+                    type: string
+                    format: uri
+
+  /projects/:
+    get:
+      summary: List projects
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - in: query
+          name: owner
+          schema:
+            type: integer
+        - in: query
+          name: members
+          schema:
+            type: integer
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: ordering
+          schema:
+            type: string
+            enum: [name, created_at, updated_at, -name, -created_at, -updated_at]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjects'
+    post:
+      summary: Create a project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+
+  /projects/{id}/:
+    get:
+      summary: Retrieve a project
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    put:
+      summary: Update a project
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+    delete:
+      summary: Delete a project
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful response
+
+  /todos/:
+    get:
+      summary: List todos
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - in: query
+          name: user
+          schema:
+            type: integer
+        - in: query
+          name: project
+          schema:
+            type: integer
+        - in: query
+          name: category
+          schema:
+            type: integer
+        - in: query
+          name: milestone
+          schema:
+            type: integer
+        - in: query
+          name: completed
+          schema:
+            type: boolean
+        - in: query
+          name: priority
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: ordering
+          schema:
+            type: string
+            enum: [due_date, created_at, updated_at, -due_date, -created_at, -updated_at]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTodos'
+    post:
+      summary: Create a todo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodoCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+
+  /todos/{id}/:
+    get:
+      summary: Retrieve a todo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+    put:
+      summary: Update a todo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodoUpdate'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+    delete:
+      summary: Delete a todo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful response
+
+  /todos/{id}/add_comment/:
+    post:
+      summary: Add a comment to a todo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+
+  /todos/{id}/add_attachment/:
+    post:
+      summary: Add an attachment to a todo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttachmentCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+
+components:
+  parameters:
+    PageParam:
+      in: query
+      name: page
+      schema:
+        type: integer
+        default: 1
+    PageSizeParam:
+      in: query
+      name: page_size
+      schema:
+        type: integer
+        default: 10
+
+  schemas:
+    Project:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        owner:
+          type: string
+          format: uri
+        members:
+          type: array
+          items:
+            type: string
+            format: uri
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        milestones:
+          type: array
+          items:
+            type: string
+            format: uri
+        todos:
+          type: array
+          items:
+            type: string
+            format: uri
+
+    ProjectCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        members:
+          type: array
+          items:
+            type: integer
+
+    ProjectUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        members:
+          type: array
+          items:
+            type: integer
+
+    Todo:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        completed:
+          type: boolean
+        user:
+          type: string
+          format: uri
+        project:
+          type: string
+          format: uri
+        category:
+          type: string
+          format: uri
+        milestone:
+          type: string
+          format: uri
+        tags:
+          type: array
+          items:
+            type: string
+            format: uri
+        priority:
+          type: string
+        due_date:
+          type: string
+          format: date
+        estimated_time:
+          type: number
+        actual_time:
+          type: number
+        parent_task:
+          type: string
+          format: uri
+        subtasks:
+          type: array
+          items:
+            type: string
+            format: uri
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        recurring_task:
+          $ref: '#/components/schemas/RecurringTask'
+
+    TodoCreate:
+      type: object
+      required:
+        - title
+        - project
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        project:
+          type: integer
+        category:
+          type: integer
+        milestone:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: integer
+        priority:
+          type: string
+        due_date:
+          type: string
+          format: date
+        estimated_time:
+          type: number
+        parent_task:
+          type: integer
+
+    TodoUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        completed:
+          type: boolean
+        category:
+          type: integer
+        milestone:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: integer
+        priority:
+          type: string
+        due_date:
+          type: string
+          format: date
+        estimated_time:
+          type: number
+        actual_time:
+          type: number
+        parent_task:
+          type: integer
+
+    Comment:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        id:
+          type: integer
+        todo:
+          type: string
+          format: uri
+        user:
+          type: string
+          format: uri
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CommentCreate:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+
+    Attachment:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        id:
+          type: integer
+        todo:
+          type: string
+          format: uri
+        file:
+          type: string
+          format: uri
+        uploaded_by:
+          type: string
+          format: uri
+        uploaded_at:
+          type: string
+          format: date-time
+
+    AttachmentCreate:
+      type: object
+      required:
+        - file
+      properties:
+        file:
+          type: string
+          format: binary
+
+    RecurringTask:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        id:
+          type: integer
+        todo:
+          type: string
+          format: uri
+        frequency:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+
+    PaginatedProjects:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+
+    PaginatedTodos:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Todo'
